@@ -1,0 +1,22 @@
+# Import Python packages
+#-----------------------
+
+from snakemake.utils import min_version
+min_version("7.0")
+
+# Import essential workflow files
+#--------------------------------
+
+configfile: "config/config.yaml"
+include: "rules/common.smk"
+include: "rules/fastq.smk"
+include: "rules/reference.smk"
+include: "rules/fastq2bam.smk"
+include: "rules/bam2vcf.smk"
+include: "rules/vcf_filter.smk"
+include: "rules/vcf_stats.smk"
+include: "rules/vcf_plot.smk"
+
+rule all:
+    input:
+        get_output()

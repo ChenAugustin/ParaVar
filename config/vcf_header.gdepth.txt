@@ -1,0 +1,1 @@
+##INFO=<ID=NDP,Number=1,Type=Integer,Description="Nb Depth Pass, Number of samples where this site is likely present in single copy as FORMAT/DP is not too high nor too low">

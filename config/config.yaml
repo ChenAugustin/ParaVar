@@ -1,0 +1,78 @@
+##############################
+# Variables you need to change
+##############################
+
+# Essentials
+#===========
+
+samples: "config/samples.csv" # path to the sample metadata CSV
+
+refGenome: "VGP_ZfGRCv1" # name of reference assembly
+refPath: "/crex/proj/sllstore2017073/private/ZfGRC/VGP_ZfGRCv1_pseudo.sorted.fasta" # path to reference fasta file
+
+controlseq: "config/controlseq.bed" # non-target sequence
+targetseq: "config/targetseq.bed" # target sequence
+
+
+##############################
+# Variables you *might* need to change
+##############################
+
+# What to run
+#============
+
+# Set to "true" or "false"
+run_fastqc: false # FastQC on input FastQ (untrimmed or trimmed by yourself). Note: do not activate this when using HiFi accurate long reads as unsupported yet
+run_trimmomatic: false # Note: this is disabled when using HiFi accurate long reads
+run_fastqc_post: false # FastQC post-trimming with Trimmomatic. Note: do not activate this when using HiFi accurate long reads as this will force Trimmomatic to run
+run_samtools_depth_lib_controlseq: true # if false, fraction_targetseq_in_targetlib is used
+
+# Settings
+#=========
+
+# Trimmomatic
+trimmomatic_setting: "ILLUMINACLIP:config/trimmomatic_adapters/TruSeq3-PE-2.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:100"
+
+# Mapping
+mapper: "bwa_mem2" # possible values "bwa_mem2", "hisat2", and "minimap2"
+read_type: "short_pe" # possible values "short_pe", "long_hifi"
+
+# Site calling
+#-------------
+
+# Intervals to parallelize
+n_intervals_controlseq: 10000
+n_intervals_targetseq: 1000
+
+# Site filtering
+#---------------
+
+# Basic filters
+min_missing: 0.8
+min_qual: 30
+min_mq: 30
+max_mq0f: 0.25
+
+# Mismapping controllib targetseq
+shuf_n_lines_per_interval: 100 # randomly samples n lines with `shuf` from each interval output of rule samtools_depth_lib_controlseq
+fraction_targetseq_in_targetlib: 0 # optional, usually close to 0, but if the paralog makes a large proportion of the libraries, then need to increase it accordingly
+vcf_header_mismap: "config/vcf_header.mismap.txt" # lines to add to VCF header when annotating the VCF file with MMCT and MMMCT
+max_mmmct: 0 # keep only sites with MMMCT equal or less than this
+
+# Depth
+targetseq_singlecopy: "config/targetseq_singlecopy.bed" # user-provided interval within the target region believed to be in single-copy. Will be used to compute the max depth (1.5x median)
+min_gdepth: 1 # minimum FORMAT/DP required
+factor_max_gdepth: 2 # factor of the median single-copy FORMAT/DP to get the upper threshold
+vcf_header_gdepth: "config/vcf_header.gdepth.txt" # lines to add to VCF header when annotating the VCF file with NDP
+min_ndp: 1 # keep only sites with NDP equal or higher than this
+
+# Analysis
+#---------
+
+# Nucleotide diversity
+pixy_population_file: "config/pixy_population_file.txt"
+pixy_window_size: 1000
+
+# Plot
+circos_karyotype_targetseq: "config/circos_karyotype_targetseq.txt"
+circos_conf_targetlib_targetseq: "config/circos_conf_targetlib_targetseq.conf"

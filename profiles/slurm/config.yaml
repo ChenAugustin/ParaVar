@@ -1,0 +1,119 @@
+executor: slurm
+use-conda: True
+jobs: 1000 # Have up to N jobs submitted at any given time
+latency-wait: 10000 # Wait N seconds for output files due to latency
+retries: 0 # Retry jobs N times.
+
+# These resources will be applied to all rules. Can be overriden on a per-rule basis below
+default-resources:
+  mem_mb: 4000
+  slurm_partition: "core"
+  slurm_account: "uppmax2025-2-57"
+  cpus_per_task: 1
+  runtime: 10000 # In minutes
+
+# Control number of threads each rule will use
+# Variables accessible via rule
+set-threads:
+  all: 1
+  dummy_rule: 1
+  trimmomatic: 20
+  hisat2_index: 20
+  hisat2: 20
+  bwa_mem2: 20
+  minimap2: 20
+  bcftools_call_allsites_controllib_targetseq: 3
+  bcftools_call_allsites_targetlib_targetseq: 3
+  awk_remove_indels_targetlib_targetseq: 1
+  awk_remove_indels_targetlib_targetseq: 1
+  vcftools_get_inv_targetlib_targetseq: 3
+  vcftools_get_var_targetlib_targetseq: 3
+  vcftools_filter_inv_targetlib_targetseq: 3
+  vcftools_filter_var_targetlib_targetseq: 3
+  bcftools_concat_filtered_targetlib_targetseq: 3
+  bcftools_annotate_mismap_control_targetseq: 3
+  bcftools_annotate_gdepth_targetlib_targetseq: 3
+  bcftools_filter_targetlib_targetseq: 3
+  pixy_nucleotide_diversity_filtered_targetlib_targetseq: 3
+
+# Control other resources used by each rule
+# Variables passed directly to SLURM and accessible via rule
+set-resources:
+  fastqc:
+    mem_mb: 4000
+  multiqc:
+    mem_mb: 4000
+  trimmomatic:
+    cpus_per_task: 20
+  fastqc_post:
+    mem_mb: 4000
+  multiqc_post:
+    mem_mb: 4000
+  hisat2_index:
+    cpus_per_task: 20
+    mem_mb: 110000
+  hisat2:
+    cpus_per_task: 20
+    mem_mb: 110000
+  bwa_mem2_index:
+    mem_mb: 110000
+  bwa_mem2:
+    cpus_per_task: 20
+    mem_mb: 110000
+  minimap2_index:
+    mem_mb: 110000
+  minimap2:
+    cpus_per_task: 20
+    mem_mb: 110000
+  bcftools_call_allsites_controllib_targetseq:
+    cpus_per_task: 3
+    mem_mb: 20000
+  bcftools_call_allsites_targetlib_targetseq:
+    cpus_per_task: 3
+    mem_mb: 20000
+  awk_remove_indels_controllib_targetseq:
+    cpus_per_task: 1
+    mem_mb: 4000
+  awk_remove_indels_targetlib_targetseq:
+    cpus_per_task: 1
+    mem_mb: 4000
+  vcftools_get_inv_targetlib_targetseq:
+    cpus_per_task: 3
+    mem_mb: 4000
+  vcftools_get_var_targetlib_targetseq:
+    cpus_per_task: 3
+    mem_mb: 4000
+  vcftools_stat_gdepth_controllib_targetseq:
+    mem_mb: 4000
+  vcftools_stat_gdepth_targetlib_targetseq:
+    mem_mb: 4000
+  samtools_depth_lib_controlseq:
+    mem_mb: 10000
+  shuf_samtools_depth_lib_controlseq:
+    mem_mb: 4000
+  r_stat_median_depth_lib_controlseq:
+    mem_mb: 4000
+  r_stat_mismap_control_targetseq:
+    cpus_per_task: 1
+    mem_mb: 4000
+  vcftools_filter_inv_targetlib_targetseq:
+    cpus_per_task: 3
+    mem_mb: 4000
+  vcftools_filter_var_targetlib_targetseq:
+    cpus_per_task: 3
+    mem_mb: 4000
+  bcftools_concat_filtered_targetlib_targetseq:
+    cpus_per_task: 3
+    mem_mb: 4000
+  bcftools_annotate_mismap_control_targetseq:
+    cpus_per_task: 3
+    mem_mb: 4000
+  bcftools_annotate_gdepth_targetlib_targetseq:
+    cpus_per_task: 3
+    mem_mb: 4000
+  bcftools_filter_targetlib_targetseq:
+    cpus_per_task: 3
+    mem_mb: 4000
+  pixy_nucleotide_diversity_filtered_targetlib_targetseq:
+    cpus_per_task: 3
+    mem_mb: 4000

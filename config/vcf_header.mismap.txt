@@ -1,0 +1,2 @@
+##INFO=<ID=MMMCT,Number=1,Type=Float,Description="Mean MMCT across samples">
+##FORMAT=<ID=MMCT,Number=1,Type=Float,Description="Expected fraction of reads from control region mismapped on target sequence">
