@@ -8,12 +8,12 @@ retries: 0 # Retry jobs N times.
 default-resources:
   mem_mb: 4000
   slurm_partition: "core"
-  slurm_account: "uppmax2025-2-57"
+  slurm_account: "naiss2023-6-360"
   cpus_per_task: 1
   runtime: 10000 # In minutes
 
 # Control number of threads each rule will use
-# Variables accessible via rule
+# These variables are directly accessed by the corresponding rule
 set-threads:
   all: 1
   dummy_rule: 1
@@ -37,7 +37,7 @@ set-threads:
   pixy_nucleotide_diversity_filtered_targetlib_targetseq: 3
 
 # Control other resources used by each rule
-# Variables passed directly to SLURM and accessible via rule
+# Variables passed directly to SLURM when submitting a job and accessible via rule
 set-resources:
   fastqc:
     mem_mb: 4000

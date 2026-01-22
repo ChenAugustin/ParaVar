@@ -59,7 +59,7 @@ rule split_intervals_targetseq:
 
 rule bcftools_call_allsites_controllib_targetseq:
     input:
-        bam = expand(RES_DIR_RULE + config["mapper"] + "/{sample_id}/{sample_id}.bam", sample_id = sample_ids_controllib),
+        bam = get_controllib_bam_to_call_allsites_on_targetseq(),
         intervals = RES_DIR_RULE + "split_intervals_targetseq/{interval_targetseq}-scattered.interval_list"
     output:
         vcf = RES_DIR_RULE + "bcftools_call_allsites_controllib_targetseq/{interval_targetseq}.raw.vcf.gz"
@@ -110,7 +110,7 @@ rule bcftools_call_allsites_controllib_targetseq:
 
 rule bcftools_call_allsites_targetlib_targetseq:
     input:
-        bam = expand(RES_DIR_RULE + config["mapper"] + "/{sample_id}/{sample_id}.bam", sample_id = sample_ids_targetlib),
+        bam = get_targetlib_bam_to_call_allsites_on_targetseq(),
         intervals = RES_DIR_RULE + "split_intervals_targetseq/{interval_targetseq}-scattered.interval_list"
     output:
         vcf = RES_DIR_RULE + "bcftools_call_allsites_targetlib_targetseq/{interval_targetseq}.raw.vcf.gz"

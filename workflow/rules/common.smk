@@ -189,3 +189,42 @@ def get_reads_to_map(wc):
         else:
             return {"r1": df["fq1"].tolist(),
                     "r2": df["fq2"].tolist()}
+
+# Get correct controllib BAM files to call all sites depending on config["run_mapping"]
+def get_controllib_bam_to_call_allsites_on_targetseq():
+
+    # Get row(s) that contains all controllib
+    df = samples[samples.targetlib == "FALSE"]
+
+    # If mapping is enabled, get all controllib BAM files from the mapping rule
+    # Else, get all controllib BAM files from pd.DataFrame
+    if config["run_mapping"]:
+        return expand(RES_DIR_RULE + config["mapper"] + "/{sample_id}/{sample_id}.bam", sample_id = sample_ids_controllib)
+    else:
+        return df["bam"].unique().tolist()
+
+# Get correct targetlib BAM files to call all sites depending on config["run_mapping"]
+def get_targetlib_bam_to_call_allsites_on_targetseq():
+
+    # Get row(s) that contains all targetlib
+    df = samples[samples.targetlib == "TRUE"]
+
+    # If mapping is enabled, get all targetlib BAM files from the mapping rule
+    # Else, get all targetlib BAM files from pd.DataFrame
+    if config["run_mapping"]:
+        return expand(RES_DIR_RULE + config["mapper"] + "/{sample_id}/{sample_id}.bam", sample_id = sample_ids_targetlib)
+    else:
+        return df["bam"].unique().tolist()
+
+# Get correct lib BAM files depending on config["run_mapping"]
+def get_lib_bam_to_samtools_depth_on_controlseq():
+
+    # Get row(s) that contains all lib
+    df = samples[samples.targetlib.isin(["TRUE", "FALSE"])]
+
+    # If mapping is enabled, get all lib BAM files from the mapping rule
+    # Else, get all lib BAM files from pd.DataFrame
+    if config["run_mapping"]:
+        return expand(RES_DIR_RULE + config["mapper"] + "/{sample_id}/{sample_id}.bam", sample_id = sample_ids_controllib + sample_ids_targetlib)
+    else:
+        return df["bam"].unique().tolist()

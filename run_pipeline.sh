@@ -9,7 +9,7 @@ conda activate env-snakemake-8.30.0 # Activate Snakemake conda environment
 #------------------------------
 
 snake_dir="/crex/proj/sllstore2017073/private/GRC/Augustin/snakemake/paralog_aware_pipeline/" # Where Snakemake lives
-output_dir="/crex/proj/sllstore2017073/private/GRC/Augustin/analysis/snakemake_output-bwa_mem2_short_SR00100/" # Where Snakemake config and output files will be saved
+output_dir="/crex/proj/sllstore2017073/private/GRC/Augustin/analysis/snakemake_output-disable_mapping_test/" # Where Snakemake config and output files will be saved
 
 # Create a unique log directory for this run
 # Do it now so that we can save logs from the bash commands + a snapshot of the pipeline incl. config etc.
@@ -23,6 +23,7 @@ mkdir "${logs_dir}rule_logs" # Create directory to store logs from the stderr an
 #---------------
 
 snakemake --directory "${snake_dir}" \
+          --dry-run \
           --rerun-triggers {input,params} \
           --snakefile "${snake_dir}workflow/Snakefile" \
           --printshellcmds \

@@ -57,7 +57,7 @@ rule samtools_depth_lib_controlseq:
     This will be used to compute median read depth of each library across controlseq for the mismapping filter.
     """
     input:
-        bam = expand(RES_DIR_RULE + config["mapper"] + "/{sample_id}/{sample_id}.bam", sample_id = sample_ids_controllib + sample_ids_targetlib),
+        bam = get_lib_bam_to_samtools_depth_on_controlseq(),
         intervals = RES_DIR_RULE + "split_intervals_controlseq/{interval_controlseq}-scattered.interval_list"
     output:
         tsv = RES_DIR_RULE + "samtools_depth_lib_controlseq/{interval_controlseq}.raw.tsv"

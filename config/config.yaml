@@ -5,13 +5,14 @@
 # Essentials
 #===========
 
-samples: "config/samples.csv" # path to the sample metadata CSV
+samples: "config/samples.csv" # Path to the sample sheet which contains metadata about the samples
+pixy_population_file: "config/pixy_population_file.txt" # To calculate nucleotide diversity using pixy, a sample file assigning each sample to a population is required
 
-refGenome: "VGP_ZfGRCv1" # name of reference assembly
-refPath: "/crex/proj/sllstore2017073/private/ZfGRC/VGP_ZfGRCv1_pseudo.sorted.fasta" # path to reference fasta file
+refGenome: "VGP_ZfGRCv1" # Name of reference assembly
+refPath: "/crex/proj/sllstore2017073/private/ZfGRC/VGP_ZfGRCv1_pseudo.sorted.fasta" # Path to reference FASTA file
 
-controlseq: "config/controlseq.bed" # non-target sequence
-targetseq: "config/targetseq.bed" # target sequence
+controlseq: "config/controlseq.bed" # Coordinates of the control regions, typically all non-target regions
+targetseq: "config/targetseq.bed" # Coordinates of the target regions
 
 
 ##############################
@@ -22,57 +23,105 @@ targetseq: "config/targetseq.bed" # target sequence
 #============
 
 # Set to "true" or "false"
-run_fastqc: false # FastQC on input FastQ (untrimmed or trimmed by yourself). Note: do not activate this when using HiFi accurate long reads as unsupported yet
-run_trimmomatic: false # Note: this is disabled when using HiFi accurate long reads
-run_fastqc_post: false # FastQC post-trimming with Trimmomatic. Note: do not activate this when using HiFi accurate long reads as this will force Trimmomatic to run
-run_samtools_depth_lib_controlseq: true # if false, fraction_targetseq_in_targetlib is used
+run_fastqc: false # Run FastQC on input FastQ (untrimmed or trimmed by yourself). Note: do not activate this when using HiFi accurate long reads as unsupported yet
+run_trimmomatic: false # Run Trimmomatic to trim input FastQ. If disabled, reads from fq1 and fq2 will be used as they are. Note: this is disabled when using HiFi accurate long reads
+run_fastqc_post: false # Run FastQC on FastQ trimmed by Trimmomatic. Note: do not activate this when using HiFi accurate long reads as this will force Trimmomatic to run
+run_mapping: true # Run mapping. If disabled, path to BAM files should be provided in the sample sheet (config/samples.csv)
 
 # Settings
 #=========
 
-# Trimmomatic
-trimmomatic_setting: "ILLUMINACLIP:config/trimmomatic_adapters/TruSeq3-PE-2.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:100"
+# Read trimming
+#--------------
+
+trimmomatic_setting: "ILLUMINACLIP:config/trimmomatic_adapters/TruSeq3-PE-2.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:100" # Trimming setting for Trimmomatic
 
 # Mapping
-mapper: "bwa_mem2" # possible values "bwa_mem2", "hisat2", and "minimap2"
-read_type: "short_pe" # possible values "short_pe", "long_hifi"
+#--------
+
+mapper: "bwa_mem2" # Mapping software. Possible values are "bwa_mem2", "hisat2", and "minimap2"
+read_type: "short_pe" # Read type. Possible values are "short_pe" and "long_hifi"
 
 # Site calling
 #-------------
 
-# Intervals to parallelize
+# Slice the control and target regions into N respective intervals of equal length for parallelization (e.g., variant calling and filtering)
 n_intervals_controlseq: 10000
 n_intervals_targetseq: 1000
 
-# Site filtering
-#---------------
+# Site filtering: basic
+#----------------------
 
-# Basic filters
-min_missing: 0.8
-min_qual: 30
-min_mq: 30
-max_mq0f: 0.25
+# Basic filters. Will be applied to both variant and invariant sites
+min_missing: 0.8 # Minimum missingness, defined as the fraction of individuals NOT missing (e.g., a site with data from 8/10 individuals has a missingness of 0.8)
+min_qual: 30 # Minimum variant quality as indivated in the QUAL column of the VCF file
+min_mq: 30 # Minimum mean mapping quality (applied to field "INFO/MQ" in VCF file)
+max_mq0f: 0.25 # Maximum fraction of reads with mapping quality 0 (applied to field "INFO/MQ0F" in VCF file)
 
-# Mismapping controllib targetseq
-shuf_n_lines_per_interval: 100 # randomly samples n lines with `shuf` from each interval output of rule samtools_depth_lib_controlseq
-fraction_targetseq_in_targetlib: 0 # optional, usually close to 0, but if the paralog makes a large proportion of the libraries, then need to increase it accordingly
-vcf_header_mismap: "config/vcf_header.mismap.txt" # lines to add to VCF header when annotating the VCF file with MMCT and MMMCT
-max_mmmct: 0 # keep only sites with MMMCT equal or less than this
+# Site filtering: MMMCT
+#----------------------
 
-# Depth
-targetseq_singlecopy: "config/targetseq_singlecopy.bed" # user-provided interval within the target region believed to be in single-copy. Will be used to compute the max depth (1.5x median)
-min_gdepth: 1 # minimum FORMAT/DP required
-factor_max_gdepth: 2 # factor of the median single-copy FORMAT/DP to get the upper threshold
-vcf_header_gdepth: "config/vcf_header.gdepth.txt" # lines to add to VCF header when annotating the VCF file with NDP
-min_ndp: 1 # keep only sites with NDP equal or higher than this
+# Stands for Mean MisMapping of Control reads on the Target site (field "INFO/MMMCT" in VCF file)
+# For each target site, each target library has it's own estimated MisMapping of Control reads on the Target site (field "FORMAT/MMCT" in VCF file)
+# This statistic is an estimator of the fraction of control reads that mismapped on the target site over all reads mapped to the target site
+
+max_mmmct: 0 # Maximum MMMCT (applied to field "INFO/MMMCT in VCF file)
+
+# When calculating MMCT, differences in size between the control and the target libraries from the same pair must be taken into account
+# For this, the fraction of target reads inside the target library must be removed to make it comparable to the control library
+# However, this fraction itself can vary between target libraries (e.g., fraction of cells carrying B chromosomes)
+# Which gives us 2 options:
+
+# 1) Assume that all target libraries contain the same fraction of target reads
+
+# For this:
+# 1. Set `run_samtools_depth_lib_controlseq` to "false"
+# 2. Enter the fraction of target reads in target libraries in `fraction_targetseq_in_targetlib`
+# 3. Provide a value in the `library_size` column of the sample sheet 
+
+# 2) Estimate the fraction of target reads inside each target library
+
+# For this:
+# 1. Set `run_samtools_depth_lib_controlseq` to "true", which will run samtools depth across the entire control region
+# 2. To speed up this process, slice the control regions into many intervals of equal length and run samtools depth in parallel on each interval. Adjust `n_intervals_controlseq` accordingly
+# 3. Uniformly sample N sites from each interval, pool the sites together, and calculate the median read depth. Adjust `shuf_n_lines_per_interval` accordingly
+
+run_samtools_depth_lib_controlseq: true # Decides between option 1) and 2)
+fraction_targetseq_in_targetlib: 0 # Usually close to 0, but if target reads make a large fraction of the target library, then need to increase it accordingly
+shuf_n_lines_per_interval: 100 # Number of sites to sample from each control interval
+
+# Site filtering: NDP
+#--------------------
+
+# Stands for Number of individuals whose read Depth Pass the criteria of being in single copy (field "INFO/NDP" in VCF file)
+# Incomplete assembly of the target region is expected to lead to the mismapping of reads from unassembled target regions onto their assembled counterparts
+# Thus, apply a filter on read depth (field "FORMAT/DP" in VCF file) to keep only sites are minimally affected by this type of mismapping
+
+# For this:
+# 1. Identify a region within the target regions believed to be in single copy across all individuals. Provide it in `targetseq_singlecopy`
+# 2. Use it as reference to compute the maximum read depth (= factor_max_gdepth x median read depth) beyond which the site is likely in >1 copy. Set `factor_max_gdepth`
+# 3. Define a lower threshold for the read depth. Set `min_gdepth`
+# 4. Calculate maximum read depth for each individual separately to control for differences in library size and exclude sites where too many individuals are outside their single-copy range. Set `min_ndp`
+
+targetseq_singlecopy: "config/targetseq_singlecopy.bed"
+factor_max_gdepth: 2
+min_gdepth: 1
+min_ndp: 1
 
 # Analysis
 #---------
 
-# Nucleotide diversity
-pixy_population_file: "config/pixy_population_file.txt"
-pixy_window_size: 1000
+# Nucleotide diversity ("pi")
+pixy_window_size: 1000 # Legth of windows across which pixy should calculate pi
 
-# Plot
+# Plot: beta version, likely contain errors, but since it is the last step, en error won't interrupt the pipeline, so it's ok
 circos_karyotype_targetseq: "config/circos_karyotype_targetseq.txt"
 circos_conf_targetlib_targetseq: "config/circos_conf_targetlib_targetseq.conf"
+
+
+##############################
+# Variables you shouldn't change
+##############################
+
+vcf_header_mismap: "config/vcf_header.mismap.txt" # Lines to add to VCF header when annotating the VCF file with MMCT and MMMCT
+vcf_header_gdepth: "config/vcf_header.gdepth.txt" # Lines to add to VCF header when annotating the VCF file with NDP
