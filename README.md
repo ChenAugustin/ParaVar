@@ -14,6 +14,9 @@ If you use ParaVar, please cite:
 - Chen A, Ruiz-Ruano FJ, Contreras-López O, Fouché S, Suh A, Pei Y (2026). Paralog-aware assembly and filtering strategies reveal minimal nucleotide variation on the macro germline-restricted chromosome of the zebra finch. Heredity. https://doi.org/10.1038/s41437-026-00830-z
 - Also, make sure to cite the tools you used within ParaVar.
 
+\
+Note: ParaVar's internal structure design was heavily inspired by snpArcher, a reference workflow for fast, reproducible, and high-throughput population genomics (https://doi.org/10.1093/molbev/msad270).
+
 <br/>
 
 ## Table of contents
